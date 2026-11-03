@@ -188,7 +188,7 @@ def run_episode(name, scene, start, goal, predictor, args, seed, prior=None, hoo
         log["selected"].append(info["selected"])
         if hook is not None:
             hook(step=step, x=x.copy(), x_est=x_est, peds=peds, tracks=tracker.tracks, pred=pred, info=info, u=u,
-                 r_col=r_col, delta=mcfg.delta, tracker=tracker)
+                 r_col=r_col, delta=mcfg.delta, tracker=tracker, det=det)
 
         if n_sub == 1:
             x = dynamics(x, u, p_true, rcfg.dt) + LQ @ rng.standard_normal(4)

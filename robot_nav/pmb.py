@@ -219,6 +219,9 @@ class PMBConfig(TrackerConfig):
     occluder_radius: float = 0.3
     adapt_rate: bool = True  # learn the crowd multiplier online (False: fixed lambda = 1, plain Poisson)
     rate_tau: Optional[float] = None  # forgetting time (frames); None = the prior's count-autocorrelation time
+    # Calibration (calibrate_ppp.py; None / 0 = off, as in all pre-registered results):
+    p_detect_model: Optional[float] = None  # detection probability the filter assumes in view (None: camera's p_detect)
+    relax: float = 0.0  # per-frame relaxation of the undetected intensity toward the prior occupancy (refill)
 
 
 class BernoulliTrack(Track):
@@ -261,7 +264,8 @@ class PMBTracker:
             along = u @ e
             perp = np.linalg.norm(e - along[..., None] * u, axis=-1)
             inside &= ~((along > 0) & (perp < self.cfg.occluder_radius) & (dist > e_dist + self.cfg.occluder_radius))
-        return self.cam.p_detect * inside
+        p = self.cam.p_detect if self.cfg.p_detect_model is None else self.cfg.p_detect_model
+        return p * inside
 
     # ------------------------------------------------------------------ PPP
     def _predict_ppp(self, frac: float = 1.0):
@@ -296,6 +300,9 @@ class PMBTracker:
         rate); record: append the track positions to their histories (only on the frame grid
         the trajectory predictor was trained on)."""
         self._predict_ppp(frac)
+        if self.cfg.relax > 0:  # people who do not follow the learned flows: refill toward the prior
+            w = min(1.0, self.cfg.relax * frac)
+            self.D = (1 - w) * self.D + w * self.prior.occupancy
         F, Q = (self.F, self.Q) if frac == 1.0 else cwna(frac, self.cfg.qc)
         occluders = np.array([z for z, _ in detections.values()]).reshape(-1, 2)
         self.last_pD = self.detection_prob(self.centers, x_est, occluders)

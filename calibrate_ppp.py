@@ -168,14 +168,14 @@ def nb_logpmf(n, M, a, b):
     return gammaln(a + n) - gammaln(a) - gammaln(n + 1) + a * np.log(b / (b + M)) + n * np.log(M / (b + M))
 
 
-def replay(recs, p_detect_model=None, relax=0.0):
+def replay(recs, p_detect_model=None, relax=0.0, prior_fn=None, **pmb_kw):
     """Replay the tracker over recorded episodes; return per-step 'now' records and per-disk forecast records."""
     from robot_nav.camera import CameraConfig
     from robot_nav.pmb import PMBConfig, PMBTracker, channel_mixing, ppp_predict
     now, fc = [], []
     for rec in recs:
-        prior = _prior(rec)
-        cfg = PMBConfig(prune_pos_std=1.0, p_detect_model=p_detect_model, relax=relax)
+        prior = _prior(rec) if prior_fn is None else prior_fn(rec)
+        cfg = PMBConfig(prune_pos_std=1.0, p_detect_model=p_detect_model, relax=relax, **pmb_kw)
         tr = PMBTracker(prior, CameraConfig(fov_deg=FOV, max_range=RANGE), cfg)
         g, centers, mix = prior.grid, prior.grid.centers, channel_mixing(0.02)
         log, fut = rec["log"], rec["future"]

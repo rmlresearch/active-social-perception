@@ -222,6 +222,10 @@ class PMBConfig(TrackerConfig):
     # Calibration (calibrate_ppp.py; None / 0 = off, as in all pre-registered results):
     p_detect_model: Optional[float] = None  # detection probability the filter assumes in view (None: camera's p_detect)
     relax: float = 0.0  # per-frame relaxation of the undetected intensity toward the prior occupancy (refill)
+    # Crowd multiplier prior strength (None: the prior's fitted a0). Small = "unsure how busy it is": lambda starts at
+    # mean 1 with a large variance, adapts quickly to the first detections, and forgetting decays toward this weak
+    # belief instead of the fitted one.
+    rate_prior_strength: Optional[float] = None
 
 
 class BernoulliTrack(Track):
@@ -245,7 +249,7 @@ class PMBTracker:
         self.F, self.Q = cwna(1.0, cfg.qc)
         self.mix = channel_mixing(cfg.channel_switch)
         self.last_pD: Optional[np.ndarray] = None
-        self.rate_a = self.rate_b = prior.rate_a0
+        self.rate_a = self.rate_b = prior.rate_a0 if cfg.rate_prior_strength is None else cfg.rate_prior_strength
 
     # ------------------------------------------------------------------ detection model
     def detection_prob(self, pts: np.ndarray, x_est: np.ndarray, occluders: np.ndarray) -> np.ndarray:
@@ -308,7 +312,8 @@ class PMBTracker:
         self.last_pD = self.detection_prob(self.centers, x_est, occluders)
         if self.cfg.adapt_rate:
             tau = self.cfg.rate_tau if self.cfg.rate_tau is not None else self.prior.rate_tau
-            g, a0 = np.exp(-frac / tau), self.prior.rate_a0
+            g = np.exp(-frac / tau)
+            a0 = self.prior.rate_a0 if self.cfg.rate_prior_strength is None else self.cfg.rate_prior_strength
             self.rate_a = g * self.rate_a + (1 - g) * a0 + sum(pid not in self.tracks for pid in detections)
             self.rate_b = g * self.rate_b + (1 - g) * a0 + float(np.sum(self.last_pD * self.D.sum(0)))
 

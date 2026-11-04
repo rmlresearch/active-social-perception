@@ -18,3 +18,4 @@ paper/**/*.aux
 paper/**/*.log
 paper/**/*.out
 paper/**/build.log
+paper/overleaf/

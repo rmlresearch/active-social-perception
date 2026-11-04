@@ -148,6 +148,15 @@ class MPCConfig:
     approach_steps: int = 3
     robot_sensitivity: bool = True  # False: ignore robot uncertainty propagation (ablation)
     w_perception: float = 2.0
+    # Crowd-density exploration (option 2; 0 = off, as in all pre-registered results): reward views that reduce the
+    # uncertainty of the PMB crowd multiplier lambda ~ Gamma(a, b). Covering expected undetected base mass E with the
+    # planned views shrinks Var(lambda) by b / (b + E), so the term is -w_explore * log(1 + E / b): large while b is
+    # small (little evidence, weak prior), fading as evidence accumulates. E sums, over the explore_slots largest
+    # undetected masses within explore_radius (moving with their flow), the probability that the planned views see
+    # each at least once.
+    w_explore: float = 0.0
+    explore_slots: int = 12
+    explore_radius: float = 5.0
     relevance_length: float = 1.5  # m, decay of collision relevance with clearance
     w_cam_forward: float = 0.05  # weak prior to look ahead when nothing else matters
     vis_sharpness_angle: float = 30.0  # on cos(bearing) - cos(fov/2)
@@ -235,6 +244,7 @@ class SupeRMPC:
             self._um, self._um_t = None, None
         self.X_ws = self.U_ws = None
         self.wall_fn = None  # path (N, 2) -> points, normals (N, K, 2) of nearby walls (cfg.wall_points > 0)
+        self.explore_fn = None  # center (2,) -> pos, vel, mass, b of undetected masses (cfg.w_explore > 0)
         self._nearest = None  # camera target (camera_mode="nearest" / "oracle_gaze")
         self.gt = None  # (positions (n, 2), velocities (n, 2)) of ALL pedestrians, for camera_mode="oracle_gaze"
         self.Sx = self.Su = None
@@ -260,6 +270,11 @@ class SupeRMPC:
             pv=opti.parameter(2 * cfg.perception_unseen_slots, N),
             pm=opti.parameter(cfg.perception_unseen_slots, N),
         )
+        if cfg.w_explore > 0:
+            par["eq"] = opti.parameter(2 * cfg.explore_slots)
+            par["ev"] = opti.parameter(2 * cfg.explore_slots)
+            par["em"] = opti.parameter(cfg.explore_slots)
+            par["eb"] = opti.parameter()
         if cfg.wall_points:
             par["wq"] = opti.parameter(2 * cfg.wall_points, N)
             par["wn"] = opti.parameter(2 * cfg.wall_points, N)
@@ -373,6 +388,8 @@ class SupeRMPC:
                         for vis in self._step_views(k, lambda f, b=mu_k: b):
                             cost += cfg.w_approach * par["app"][j] * (1 - vis) / len(self._sub[k])
             cost += cfg.w_perception_unseen * self._unseen_perception_cost(X, par)
+            if cfg.w_explore > 0:
+                cost -= cfg.w_explore * self._explore_gain(par)
 
         opti.minimize(cost)
         # expand: evaluate the MX graph as SX, ~10x faster for these many scalar terms.
@@ -403,6 +420,19 @@ class SupeRMPC:
         cos_half = np.cos(np.radians(self.cam.fov_deg) / 2)
         vis = sigmoid(cfg.vis_sharpness_angle * (ca.dot(heading, d) / dist - cos_half))
         return vis * sigmoid(cfg.vis_sharpness_range * (self.cam.max_range - dist))
+
+    def _explore_gain(self, par):
+        """log(1 + E / b): information about the crowd multiplier from the planned views (see MPCConfig.w_explore)."""
+        cfg, N = self.cfg, self.cfg.N
+        E = 0
+        for i in range(cfg.explore_slots):
+            q, v = par["eq"][2 * i : 2 * i + 2], par["ev"][2 * i : 2 * i + 2]
+            miss = 1
+            for m in range(N):
+                for vis in self._step_views(m, lambda f, q=q, v=v, m=m: q + (m + f) * v):
+                    miss = miss * (1 - self.cam.p_detect * vis)
+            E = E + par["em"][i] * (1 - miss)
+        return ca.log(1 + E / par["eb"])
 
     def _unseen_perception_cost(self, X, par):
         """pm = w_ik m_ik (collision-weighted mass) for the highest-weight masses per step."""
@@ -620,6 +650,16 @@ class SupeRMPC:
         o.set_value(P["rel"], rel.T)
         o.set_value(P["ahat"], ahat.transpose(1, 2, 0).reshape(2 * M, N))
         o.set_value(P["cam"], self._camera_command(x0, t, ut))
+        if cfg.w_explore > 0:
+            S = cfg.explore_slots
+            if self.explore_fn is not None:
+                eq, ev, em, eb = self.explore_fn(x0[:2])
+            else:
+                eq, ev, em, eb = np.full((S, 2), FAR), np.zeros((S, 2)), np.zeros(S), 1e6
+            o.set_value(P["eq"], np.asarray(eq).ravel())
+            o.set_value(P["ev"], np.asarray(ev).ravel())
+            o.set_value(P["em"], np.asarray(em))
+            o.set_value(P["eb"], float(eb))
         if cfg.camera_mode == "decoupled":
             o.set_value(P["umot"], self._um)
         o.set_value(P["kappa"], kappa)

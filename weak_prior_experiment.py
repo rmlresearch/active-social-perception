@@ -34,7 +34,10 @@ def thinned_prior(rec):
         ids = np.unique(d[:, 1])
         keep = np.random.default_rng(c.SCENE_NAMES.index(sc)).permutation(ids)[: len(ids) // 2]
         path = f"{CACHE}/{sc}_half.txt"
-        np.savetxt(path, d[np.isin(d[:, 1], keep)], fmt="%.4f")
+        if not os.path.exists(path):  # written once, atomically (parallel workers may race)
+            tmp = f"{path}.{os.getpid()}.tmp"
+            np.savetxt(tmp, d[np.isin(d[:, 1], keep)], fmt="%.4f")
+            os.replace(tmp, path)
         first, step, q1, split = c.quarters(sc)
         _THIN[sc] = fit_scene_prior(path, frame_range=(first, q1))
     return _THIN[sc]

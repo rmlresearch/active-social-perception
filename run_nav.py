@@ -115,6 +115,8 @@ def run_episode(name, scene, start, goal, predictor, args, seed, prior=None, hoo
     mpc = SupeRMPC(mcfg, rcfg, cam, tcfg)
     tracker_kind = spec.get("tracker") or args.tracker
     tracker = PMBTracker(prior, cam, PMBConfig(**(getattr(args, "pmb_overrides", None) or {}))) if tracker_kind == "pmb" else Tracker(tcfg)
+    if tracker_kind == "pmb" and mcfg.w_explore > 0:  # crowd-density exploration term (option 2)
+        mpc.explore_fn = lambda c: tracker.explore_masses(c, mcfg.explore_slots, mcfg.explore_radius)
     # Camera sub-steps: the camera turns and observes cam_substeps times per control step; the robot
     # input, pedestrian prediction and collision checks stay on the 0.4 s grid.
     n_sub = mcfg.cam_substeps

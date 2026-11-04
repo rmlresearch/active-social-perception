@@ -426,3 +426,20 @@ class PMBTracker:
             pos[k, : len(cand)], mass[k, : len(cand)], vel[k, : len(cand)] = cpos[cand], Dc[cand], cvel[cand]
         a, b = (self.rate_a, self.rate_b) if self.cfg.adapt_rate else (1e6, 1e6)
         return pos, mass, vel, self.mass_limit(delta_u), a, b
+
+    def explore_masses(self, center: np.ndarray, n_slots: int, radius: float, coarsen: int = 2):
+        """The n_slots largest (coarse cell, channel) masses of the CURRENT undetected intensity within radius of
+        center, for the crowd-density exploration term of the MPC (MPCConfig.w_explore). Returns pos (P, 2),
+        velocity (P, 2) in m/frame (the channel's mean flow), base mass (P,) and the multiplier's b."""
+        g = self.grid
+        nxc, nyc = g.nx // coarsen, g.ny // coarsen
+        centers = self.centers[: nxc * coarsen, : nyc * coarsen].reshape(nxc, coarsen, nyc, coarsen, 2).mean((1, 3))
+        cpos = np.broadcast_to(centers, (C, nxc, nyc, 2)).reshape(-1, 2)
+        cvel = np.broadcast_to(self.prior.vel_mean[:, None, None, :], (C, nxc, nyc, 2)).reshape(-1, 2)
+        Dc = self.D[:, : nxc * coarsen, : nyc * coarsen].reshape(C, nxc, coarsen, nyc, coarsen).sum((2, 4)).ravel()
+        cand = np.flatnonzero((np.linalg.norm(cpos - center, axis=-1) < radius) & (Dc > 1e-6))
+        cand = cand[np.argsort(-Dc[cand])][:n_slots]
+        pos, vel, mass = np.full((n_slots, 2), 1e3), np.zeros((n_slots, 2)), np.zeros(n_slots)
+        pos[: len(cand)], vel[: len(cand)], mass[: len(cand)] = cpos[cand], cvel[cand], Dc[cand]
+        b = self.rate_b if self.cfg.adapt_rate else 1e6
+        return pos, vel, mass, b

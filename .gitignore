@@ -19,3 +19,5 @@ paper/**/*.log
 paper/**/*.out
 paper/**/build.log
 paper/overleaf/
+results/ppp_calibration/logs.pkl
+results/ppp_calibration/thinned/

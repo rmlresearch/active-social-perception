@@ -26,13 +26,13 @@ secondary: per scene group and all collisions
 
 ABLATION FAMILY (two-sided, Holm over eight), full method = proposed above
   full method 0.646
-  - plain Kalman tracker               0.588 (all coll. 0.552)  full won:lost 374:269  p = 3.959e-05  p_Holm = 0.0003167  n = 1800
-  - no tracked gaze term               0.608 (all coll. 0.580)  full won:lost 277:208  p = 0.001986  p_Holm = 0.0139  n = 1800
-  - no unseen gaze term                0.611 (all coll. 0.588)  full won:lost 300:236  p = 0.006451  p_Holm = 0.03871  n = 1800
-  - no unseen constraint               0.614 (all coll. 0.601)  full won:lost 107:89  p = 0.2245  p_Holm = 0.8982  n = 624
-  - no robot-uncertainty propagation   0.619 (all coll. 0.594)  full won:lost 285:237  p = 0.03957  p_Holm = 0.1979  n = 1800
-  - no existence weighting             0.638 (all coll. 0.603)  full won:lost 185:170  p = 0.4575  p_Holm = 1  n = 1800
-  - no stale-track pruning             0.639 (all coll. 0.605)  full won:lost 180:167  p = 0.5195  p_Holm = 1  n = 1800
-  - no track state covariance          0.645 (all coll. 0.625)  full won:lost 254:252  p = 0.9645  p_Holm = 1  n = 1800
+  - plain Kalman tracker               0.589 (all coll. 0.552)  full won:lost 371:269  p = 6.329e-05  p_Holm = 0.0005063  n = 1800
+  - no tracked gaze term               0.612 (all coll. 0.580)  full won:lost 270:208  p = 0.005216  p_Holm = 0.03651  n = 1800
+  - no unseen gaze term                0.613 (all coll. 0.588)  full won:lost 296:236  p = 0.01046  p_Holm = 0.06277  n = 1800
+  - no robot-uncertainty propagation   0.621 (all coll. 0.594)  full won:lost 282:237  p = 0.05333  p_Holm = 0.2667  n = 1800
+  - no unseen constraint               0.633 (all coll. 0.603)  full won:lost 266:243  p = 0.3295  p_Holm = 1  n = 1800
+  - no existence weighting             0.639 (all coll. 0.603)  full won:lost 181:169  p = 0.5566  p_Holm = 1  n = 1800
+  - no stale-track pruning             0.642 (all coll. 0.605)  full won:lost 175:168  p = 0.746  p_Holm = 1  n = 1800
+  - no track state covariance          0.648 (all coll. 0.625)  full won:lost 251:254  p = 0.9291  p_Holm = 1  n = 1800
 
 SocNavBench alternatives (top 3 by pooled 2D success excl. spawn): decoupled, information gain, fixed

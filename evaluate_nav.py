@@ -74,7 +74,7 @@ PLANNERS = ["dmpc", "supermpc", "supermpc-scan", "supermpc-active"]
 FIELDS = ["scene", "episode", "frame", "start_x", "start_y", "goal_x", "goal_y", "path_peds", "surge", "planner",
           "success", "reached", "collisions", "coll_tracked", "coll_untracked", "coll_stopped", "steps",
           "min_clearance", "coverage", "solve_ms", "failures", "slack_steps", "unseen_slack_steps",
-          "coll_spawn", "success_nospawn"]
+          "coll_spawn", "success_nospawn", "first_coll", "first_coll_step"]
 
 
 def parse_args():
@@ -97,6 +97,8 @@ def parse_args():
     p.add_argument("--protocol", choices=["legacy", "clean"], default="legacy")
     p.add_argument("--crowd", choices=["replay", "reactive"], default="replay")
     p.add_argument("--max-steps", type=int, default=90)
+    p.add_argument("--stop-on-collision", action="store_true",
+                   help="end an episode at its first collision with a non-spawn pedestrian (success unchanged)")
     p.add_argument("--workers", type=int, default=12)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--checkpoint", default="checkpoints/social_lstm_zara_varobs.pt")
@@ -186,6 +188,7 @@ def _run_job(job, opts):
                                                  else None)
     prior = _WORKER["priors"][key]
     args = SimpleNamespace(max_steps=opts["max_steps"], goal_tol=0.3, tracker=opts["tracker"],
+                           stop_on_collision=opts.get("stop_on_collision", False),
                            delta_unseen=opts["delta_unseen"], fov=opts["fov"], cam_range=opts["range"],
                            mpc_overrides=opts["mpc_overrides"], pmb_overrides=opts.get("pmb_overrides"),
                            robot_overrides=opts.get("robot_overrides"))
@@ -218,6 +221,7 @@ def run_all(args):
     opts = dict(robot_overrides={kv.split("=", 1)[0]: ast.literal_eval(kv.split("=", 1)[1]) for kv in args.robot_set},
                 pmb_overrides={kv.split("=", 1)[0]: ast.literal_eval(kv.split("=", 1)[1]) for kv in args.pmb_set},
                 tracker=args.tracker, delta_unseen=args.delta_unseen, max_steps=args.max_steps, seed=args.seed,
+                stop_on_collision=args.stop_on_collision,
                 protocol=args.protocol, crowd=args.crowd, checkpoint=args.checkpoint,
                 fov=args.fov, range=args.range,
                 mpc_overrides={**{k: v for k, v in (("w_perception", args.w_perception),
@@ -260,7 +264,7 @@ def load(path):
         rows = list(csv.DictReader(f))
     for r in rows:
         for k in FIELDS:
-            if k not in ("scene", "planner") and r.get(k) not in (None, ""):
+            if k not in ("scene", "planner", "first_coll") and r.get(k) not in (None, ""):
                 r[k] = float(r[k])
     return rows
 

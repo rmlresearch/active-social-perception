@@ -138,6 +138,7 @@ def run_episode(name, scene, start, goal, predictor, args, seed, prior=None, hoo
     slacks, unseen_slacks, u = [], [], np.zeros(3)
     prev_peds = {}
     reached = False
+    first_coll = None  # (kind, step) of the first collision with a non-spawn pedestrian
     for step in range(args.max_steps):
         peds = scene.positions(step, robot=x[:2])  # a reactive crowd responds to the robot
         for pid in set(peds) - present:
@@ -150,9 +151,15 @@ def run_episode(name, scene, start, goal, predictor, args, seed, prior=None, hoo
             collisions += clear < 0
             for pid, q in peds.items():
                 if np.linalg.norm(x[:2] - q) < r_col:
-                    coll_kinds["tracked" if pid in tracker.tracks else "untracked"] += 1
+                    kind = "tracked" if pid in tracker.tracks else "untracked"
+                    coll_kinds[kind] += 1
                     coll_kinds["stopped"] += abs(u[0]) < 0.1
                     coll_kinds["spawn"] += pid in spawned
+                    if first_coll is None and pid not in spawned:
+                        first_coll = (kind, step)
+            # Optionally end the episode at its first non-spawn collision (success is already decided there).
+            if first_coll is not None and getattr(args, "stop_on_collision", False):
+                break
         x_est = x + L0 @ rng.standard_normal(4)
         det = observe(x, x_est, mcfg.Sigma0, peds, cam, rng)
         if tracker_kind == "pmb":
@@ -219,6 +226,7 @@ def run_episode(name, scene, start, goal, predictor, args, seed, prior=None, hoo
         coll_tracked=coll_kinds["tracked"], coll_untracked=coll_kinds["untracked"],
         coll_stopped=coll_kinds["stopped"], coll_spawn=coll_kinds["spawn"],
         success_nospawn=reached and collisions - coll_kinds["spawn"] == 0,
+        first_coll=first_coll[0] if first_coll else "", first_coll_step=first_coll[1] if first_coll else -1,
         slack_steps=int(np.sum(np.array(slacks) > 1e-3)),
         unseen_slack_steps=int(np.sum(np.array(unseen_slacks) > 1e-3)),
         coverage=float(np.mean(coverage)) if coverage else np.nan,

@@ -225,7 +225,7 @@ def run_episode(name, scene, start, goal, predictor, args, seed, prior=None, hoo
         min_clearance=float(min(clearances)) if clearances else np.inf,
         coll_tracked=coll_kinds["tracked"], coll_untracked=coll_kinds["untracked"],
         coll_stopped=coll_kinds["stopped"], coll_spawn=coll_kinds["spawn"],
-        success_nospawn=reached and collisions - coll_kinds["spawn"] == 0,
+        success_nospawn=reached and first_coll is None,  # reached without hitting any non-spawn pedestrian
         first_coll=first_coll[0] if first_coll else "", first_coll_step=first_coll[1] if first_coll else -1,
         slack_steps=int(np.sum(np.array(slacks) > 1e-3)),
         unseen_slack_steps=int(np.sum(np.array(unseen_slacks) > 1e-3)),

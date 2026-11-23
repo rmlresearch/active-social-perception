@@ -100,6 +100,7 @@ On 1,800 paired replay episodes (Table~\ref{tab:replay}) Risk-Aware Gaze outperf
 \label{tab:replay}
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
 Gaze & Success & Undet.\ coll. & Det.\ coll. & Timeout & $p_\text{Holm}$ \\
@@ -115,7 +116,7 @@ Scan              & 0.579 & 0.251 & 0.158 & 0.012 & $<$0.001 \\
 Gaze oracle       & 0.689 & 0.083 & 0.193 & 0.035 & \\
 360$^\circ$ camera & 0.860 & 0.001 & 0.107 & 0.032 & \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \subsection{The objective matters, joint optimization does not}

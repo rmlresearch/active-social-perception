@@ -44,7 +44,7 @@ a_{jk}^\top(c_{r,k}-\mu_{jk}) - r_\text{c} \ge \kappa_j \sqrt{2\,a_{jk}^\top(\Si
 \end{equation}
 with $\kappa_j=\operatorname{erf}^{-1}(1-2\min(\delta/r_j,\tfrac12))$, so unlikely tracks are constrained less. Undetected pedestrians get one chance constraint per step on the forecast undetected mass inside the robot's collision disk. Constraints always use current information, so safety never relies on views that have not been taken yet.
 
-\textbf{Risk-aware gaze.} The cost rewards views that will shrink future constraint back-offs. Let $\mathrm{vis}_{jk}$ be a smooth visibility model and $\pi_{jm}$ the probability that pedestrian $j$ is first seen at step $m$. The expected covariance is then
+\textbf{Risk-Aware Gaze.} The cost, which gives the method its name, rewards views that will shrink future constraint back-offs. Let $\mathrm{vis}_{jk}$ be a smooth visibility model and $\pi_{jm}$ the probability that pedestrian $j$ is first seen at step $m$. The expected covariance is then
 \begin{equation}
 \begin{aligned}
 \tilde\Sigma_{jk} = \Sigma^\text{model}_{jk} &+ \textstyle\prod_{m\le k}(1-\mathrm{vis}_{jm})\,\Sigma^\text{state}_{jk}\\
@@ -65,7 +65,7 @@ and the cost adds $w\,\rho_{jk}\operatorname{erf}^{-1}(1-2\delta)\sqrt{2a_{jk}^\
 \toprule
 Gaze & Success & Never-seen coll. & $p_\text{Holm}$ \\
 \midrule
-Risk-aware (ours)  & \textbf{0.646} & 0.191 & -- \\
+Risk-Aware Gaze (ours)  & \textbf{0.646} & 0.191 & -- \\
 Decoupled          & 0.648 & 0.163 & 0.57 \\
 Information gain   & 0.631 & 0.208 & 0.51 \\
 Fixed              & 0.603 & 0.292 & 0.002 \\
@@ -80,7 +80,7 @@ Gaze oracle        & 0.689 & 0.083 & \\
 \vspace{-3mm}
 \end{table}
 
-\textbf{Replayed crowds.} The robot crosses ETH/UCY scenes (60$^\circ$ FOV, 4\,m range) among replayed, non-reactive pedestrians. The camera model includes occlusion, a 0.9 detection probability and range-dependent noise. The PMB prior is fitted on the first half of each recording, and episodes are drawn from the second half (450 per scene). Risk-aware gaze beats all passive and heuristic gaze strategies (Table~\ref{tab:replay}), with 35\% fewer episodes ending in a collision with a never-seen pedestrian than the fixed camera (344 vs.\ 526 of 1,800); it does pay with more episodes ending in a collision with a tracked pedestrian (272 vs.\ 163). It ties information gain and the decoupled variant. In the ablations (Holm over eight), replacing the PMB tracker by a Kalman filter (0.589, $p_\text{Holm}{=}0.001$) and dropping the tracked-pedestrian gaze term (0.612, $p_\text{Holm}{=}0.04$) significantly lower success; the unseen-pedestrian term is borderline (0.613, $p_\text{Holm}{=}0.06$).
+\textbf{Replayed crowds.} The robot crosses ETH/UCY scenes (60$^\circ$ FOV, 4\,m range) among replayed, non-reactive pedestrians. The camera model includes occlusion, a 0.9 detection probability and range-dependent noise. The PMB prior is fitted on the first half of each recording, and episodes are drawn from the second half (450 per scene). Risk-Aware Gaze beats all passive and heuristic gaze strategies (Table~\ref{tab:replay}), with 35\% fewer episodes ending in a collision with a never-seen pedestrian than the fixed camera (344 vs.\ 526 of 1,800); it does pay with more episodes ending in a collision with a tracked pedestrian (272 vs.\ 163). It ties information gain and the decoupled variant. In the ablations (Holm over eight), replacing the PMB tracker by a Kalman filter (0.589, $p_\text{Holm}{=}0.001$) and dropping the tracked-pedestrian gaze term (0.612, $p_\text{Holm}{=}0.04$) significantly lower success; the unseen-pedestrian term is borderline (0.613, $p_\text{Holm}{=}0.06$).
 
 \textbf{Photorealistic RGB-D simulation.} We connected the planner to SocNavBench~\cite{socnavbench}. It replays the same recordings in S3DIS building scans~\cite{armeni2016}, with pedestrians rendered as SURREAL bodies~\cite{varol2017}. Each step, the robot renders a $256{\times}256$ RGB-D image from its pose and pan angle (Fig.~\ref{fig:socnav}). A COCO-trained Faster R-CNN~\cite{ren2015} detects persons, the range comes from the depth pixels inside each box, and detections are associated with the tracks by gated Hungarian matching. On rendered frames, detection precision is 0.93 and recall is 0.88--0.96 within 4\,m, with a median position error of 0.12\,m. Walls enter the MPC as half-plane constraints at the nearest map points. We compare our method with the three best alternatives of the replay study on SocNavBench's 30 curated single-recording episodes with ten fresh seeds each (300 paired runs). Since seeds share episodes, the primary test is a permutation test on the 30 per-episode mean differences.
 
@@ -93,7 +93,7 @@ Gaze oracle        & 0.689 & 0.083 & \\
 \toprule
 Gaze & Success & Ours $-$ other (pts) & $p_\text{Holm}$ \\
 \midrule
-Risk-aware (ours) & \textbf{0.657} & -- & -- \\
+Risk-Aware Gaze (ours) & \textbf{0.657} & -- & -- \\
 Decoupled         & 0.633 & $+2.3$ $[-6.0, +10.3]$ & 0.29 \\
 Information gain  & 0.603 & $+5.3$ $[-1.3, +12.3]$ & 0.17 \\
 Fixed             & 0.567 & $+9.0$ $[+1.3, +16.7]$ & 0.056 \\
@@ -102,7 +102,7 @@ Fixed             & 0.567 & $+9.0$ $[+1.3, +16.7]$ & 0.056 \\
 \vspace{-3mm}
 \end{table}
 
-With real vision, risk-aware gaze raises success over the fixed camera by 9 points; the confidence interval excludes zero and the uncorrected test is significant ($p{=}0.019$), but after correction it narrowly misses ($p_\text{Holm}{=}0.056$, Table~\ref{tab:socnav}).
+With real vision, Risk-Aware Gaze raises success over the fixed camera by 9 points; the confidence interval excludes zero and the uncorrected test is significant ($p{=}0.019$), but after correction it narrowly misses ($p_\text{Holm}{=}0.056$, Table~\ref{tab:socnav}).
 
 \section{Conclusion}
 A risk-aware perception objective, which points the camera where uncertainty threatens the planned motion, reliably beats passive and heuristic gaze in replayed crowds, and shows a gain of the same size, just short of corrected significance, with real RGB-D perception in a photorealistic simulator. Optimizing gaze jointly with the motion brought no measurable benefit over a decoupled two-stage version of the same objective, and information-gain gaze performed comparably. Limitations, and next steps, are non-reactive replayed pedestrians, ground-truth localization and the short detection range.

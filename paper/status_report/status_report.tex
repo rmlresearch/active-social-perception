@@ -68,12 +68,12 @@ whose three terms are the predictor's own spread, which no observation reduces; 
 w\,\rho_{jk}\,\kappa\sqrt{2a_{jk}^\top(\Sigma_{r,k}+\tilde\Sigma_{jk})a_{jk}},\quad \rho_{jk} = e^{-(d_{jk}-r_\text{c})/\ell},
 \label{eq:gaze}
 \end{equation}
-where the relevance $\rho_{jk}$ decays with the clearance $d_{jk}-r_\text{c}$ between the predicted position and the previous plan ($\ell{=}1.5$\,m), so that a pedestrian far from the path contributes little however uncertain. A second term treats undetected pedestrians in the same way: each forecast mass $m_{ik}$ of the intensity near the planned position at step $k$, moving with its flow channel, is discounted by the probability $\prod_{m\le k}(1-p_D\,\mathrm{vis}_{m})$ that none of the planned views detects it, and the discounted mass that remains within the collision disks is penalized in units of the constraint limit $M(\delta_u)$ of (f). The directions $a_{jk}$, the relevances and the undetected masses are fixed from the previous plan, so the cost can be lowered only through the camera trajectory, not by altering the motion, which remains governed by the constraints and the goal cost; the pan rate $\omega_\phi$ carries an effort cost and rate limits, so the camera does not move without expected benefit. In effect the camera is turned toward pedestrians whose predicted paths intersect the robot's and whose uncertainty along the approach direction is large, and toward regions of the planned path in which undetected pedestrians are likely.
+where the relevance $\rho_{jk}$ decays with the clearance $d_{jk}-r_\text{c}$ between the predicted position and the previous plan ($\ell{=}1.5$\,m), so that a pedestrian far from the path contributes little however uncertain. A second term treats undetected pedestrians in the same way: each forecast mass $m_{ik}$ of the intensity near the planned position at step $k$, moving with its flow channel, is discounted by the probability $\prod_{m\le k}(1-p_D\,\mathrm{vis}_{m})$ that none of the planned views detects it, and the discounted mass that remains within the collision disks is penalized in units of the constraint limit $M(\delta_u)$ of (f). The directions $a_{jk}$, the relevances and the undetected masses are fixed from the previous plan, so the cost can be lowered only through the camera trajectory, not by altering the motion, which remains governed by the constraints and the goal cost; the pan rate $\omega_\phi$ carries an effort cost and rate limits, so the camera does not move without expected benefit. In effect the camera is turned toward pedestrians whose predicted paths intersect the robot's and whose uncertainty along the approach direction is large, and toward regions of the planned path in which undetected pedestrians are likely. We call the planner with this objective \emph{Risk-Aware Gaze}.
 
 \textit{h) Relation to information gain:} The risk term \eqref{eq:gaze} is the expected back-off along one direction, the collision normal, weighted by relevance. Information gain~\cite{bajcsy1988active}, the classical active-perception objective, is $\tfrac12\log\det\tilde\Sigma$ summed over the nearest estimates and over all undetected mass alike: the uncertainty in all directions, without reference to the plan. The two are the projected and the total change of the same belief; we use this relation to interpret the results below.
 
 \section{What is Compared}
-All strategies share the planner, tracker and predictor. \emph{Fixed}: camera aligned with the heading. \emph{Scan}: a periodic sweep. \emph{Look-at-nearest}: point at the closest detected pedestrian. \emph{TTC heuristic}: point at the detected pedestrian most relevant to the planned path (a time-to-contact proxy). \emph{Information gain} and \emph{risk-aware} (ours) as in (h). \emph{Decoupled}: plan the motion first with the camera fixed, then optimize only the camera with the risk-aware cost for that motion; it isolates the effect of optimizing motion and gaze jointly. Two upper bounds: a \emph{gaze oracle}, the same camera pointed with ground truth, and a \emph{360$^\circ$ camera}.
+All strategies share the planner, tracker and predictor. \emph{Fixed}: camera aligned with the heading. \emph{Scan}: a periodic sweep. \emph{Look-at-nearest}: point at the closest detected pedestrian. \emph{TTC heuristic}: point at the detected pedestrian most relevant to the planned path (a time-to-contact proxy). \emph{Information gain} and \emph{Risk-Aware Gaze} (ours) as in (h). \emph{Decoupled}: plan the motion first with the camera fixed, then optimize only the camera with the risk-aware cost for that motion; it isolates the effect of optimizing motion and gaze jointly. Two upper bounds: a \emph{gaze oracle}, the same camera pointed with ground truth, and a \emph{360$^\circ$ camera}.
 
 \section{Evaluation Protocol}
 An episode is a \emph{success} if the robot reaches within 0.3\,m of the goal within the time budget without a collision. Collisions with \emph{spawned} pedestrians, whose recorded trajectory begins adjacent to the robot (within 3\,m in replay; less than 2\,s before contact in SocNavBench), are excluded, since no gaze policy can avoid them; counting all collisions changes no conclusion. Methods run on identical episodes and are compared with exact McNemar tests with Holm correction. Outcomes are sensitive to small perturbations (a 1\,cm change in an initial state can change an episode's outcome), so differences below about 3 points cannot be resolved with 600 episodes. Development used a single \emph{tuning seed}; every reported number comes from previously unused seeds under an analysis plan committed to version control before the run, and no parameter was tuned on them.
@@ -91,8 +91,8 @@ An episode is a \emph{success} if the robot reaches within 0.3\,m of the goal wi
 
 \section{Results}
 
-\subsection{Risk-aware gaze outperforms passive and heuristic gaze}
-On 1,800 paired replay episodes (Table~\ref{tab:replay}) risk-aware gaze outperforms the fixed camera, scanning, look-at-nearest and the TTC heuristic ($p_\text{Holm} \le 0.003$), with 35\% fewer episodes ending in a collision with an undetected pedestrian than the fixed camera (344 vs.\ 526 of 1,800). The reduction is partly offset by more episodes ending in a collision with a detected pedestrian (272 vs.\ 163): time spent observing other regions is time not spent observing them. The gaze oracle exceeds ours by 4 points, which bounds the gain available from better pointing of this camera; the 360$^\circ$ camera exceeds it by 21 points, so the dominant limitation is coverage.
+\subsection{Risk-Aware Gaze outperforms passive and heuristic gaze}
+On 1,800 paired replay episodes (Table~\ref{tab:replay}) Risk-Aware Gaze outperforms the fixed camera, scanning, look-at-nearest and the TTC heuristic ($p_\text{Holm} \le 0.003$), with 35\% fewer episodes ending in a collision with an undetected pedestrian than the fixed camera (344 vs.\ 526 of 1,800). The reduction is partly offset by more episodes ending in a collision with a detected pedestrian (272 vs.\ 163): time spent observing other regions is time not spent observing them. The gaze oracle exceeds ours by 4 points, which bounds the gain available from better pointing of this camera; the 360$^\circ$ camera exceeds it by 21 points, so the dominant limitation is coverage.
 
 \begin{table}[t]
 \centering
@@ -104,7 +104,7 @@ On 1,800 paired replay episodes (Table~\ref{tab:replay}) risk-aware gaze outperf
 \toprule
 Gaze & Success & Undet.\ coll. & Det.\ coll. & Timeout & $p_\text{Holm}$ \\
 \midrule
-Risk-aware (ours) & 0.646 & 0.191 & 0.151 & 0.012 & -- \\
+Risk-Aware Gaze (ours) & 0.646 & 0.191 & 0.151 & 0.012 & -- \\
 Decoupled         & 0.648 & 0.163 & 0.172 & 0.017 & 0.57 \\
 Information gain  & 0.631 & 0.208 & 0.148 & 0.012 & 0.51 \\
 Fixed             & 0.603 & 0.292 & 0.091 & 0.014 & 0.002 \\
@@ -122,7 +122,7 @@ Gaze oracle       & 0.689 & 0.083 & 0.193 & 0.035 & \\
 Information gain ties the risk-aware objective (274:247, $p{=}0.26$), and so does the decoupled planner (264:267). The gain is attributable to the objective, which directs the camera at the uncertainty that affects the planned path, and not to the joint optimization of gaze and motion; the decoupled variant is computationally cheaper and equally effective. In the ablations (Holm over eight), only the tracker and the detected-pedestrian gaze term are individually necessary: a Kalman tracker in place of the PMB lowers success by 5.7 points ($p_\text{Holm}{=}0.001$), removing the detected-pedestrian term by 3.4 ($p_\text{Holm}{=}0.04$), and removing the undetected-pedestrian term by 3.3 ($p_\text{Holm}{=}0.06$); the undetected-pedestrian constraint, existence weighting, the pruning of open-loop estimates and the propagated state covariance show no measurable effect.
 
 \subsection{Dependence on crowd density}
-Splitting the episodes by the number of pedestrians near the straight-line path (Table~\ref{tab:density}), the gain over the fixed camera is absent at low density, 5 points at medium density and 7.5 points at high density, where risk-aware gaze also exceeds information gain (0.447 vs.\ 0.394), the only place in the replays where the two objectives separate. This split was made after the pre-registered analysis and is descriptive.
+Splitting the episodes by the number of pedestrians near the straight-line path (Table~\ref{tab:density}), the gain over the fixed camera is absent at low density, 5 points at medium density and 7.5 points at high density, where Risk-Aware Gaze also exceeds information gain (0.447 vs.\ 0.394), the only place in the replays where the two objectives separate. This split was made after the pre-registered analysis and is descriptive.
 
 \begin{table}[t]
 \centering
@@ -142,7 +142,7 @@ Dense  & 497 & 0.447 & 0.394 & 0.372 & 0.736 & 116\,:\,79 ($p{=}0.01$) \\
 \end{table}
 
 \subsection{With real perception}
-On SocNavBench's 30 curated episodes with ten fresh seeds (300 paired runs, Table~\ref{tab:socnav}), the three best-performing replay alternatives were compared with ours using the full vision pipeline. Risk-aware gaze gains 9 points over the fixed camera; the confidence interval excludes zero and the uncorrected test is significant ($p{=}0.019$), but the Holm-corrected test falls just short of significance ($p_\text{Holm}{=}0.056$). The gains over information gain and the decoupled planner are small, as in the replays. Replacing the simulated camera with the detector did not reduce any method's success, so within 4\,m perception noise is not the limiting factor. The planner solves in about 90\,ms in replay and 400\,ms with vision (CPU, including the detector).
+On SocNavBench's 30 curated episodes with ten fresh seeds (300 paired runs, Table~\ref{tab:socnav}), the three best-performing replay alternatives were compared with ours using the full vision pipeline. Risk-Aware Gaze gains 9 points over the fixed camera; the confidence interval excludes zero and the uncorrected test is significant ($p{=}0.019$), but the Holm-corrected test falls just short of significance ($p_\text{Holm}{=}0.056$). The gains over information gain and the decoupled planner are small, as in the replays. Replacing the simulated camera with the detector did not reduce any method's success, so within 4\,m perception noise is not the limiting factor. The planner solves in about 90\,ms in replay and 400\,ms with vision (CPU, including the detector).
 
 \begin{table}[t]
 \centering
@@ -155,7 +155,7 @@ On SocNavBench's 30 curated episodes with ten fresh seeds (300 paired runs, Tabl
 \toprule
 Gaze & Success & Coll.\ undet.\,/\,det. & Ours $-$ other (pts) & $p_\text{Holm}$ \\
 \midrule
-Risk-aware (ours) & \textbf{0.657} & 0.167\,/\,0.170 & -- & -- \\
+Risk-Aware Gaze (ours) & \textbf{0.657} & 0.167\,/\,0.170 & -- & -- \\
 Decoupled         & 0.633 & 0.200\,/\,0.167 & $+2.3\,[-6.0,+10.3]$ & 0.29 \\
 Information gain  & 0.603 & 0.223\,/\,0.167 & $+5.3\,[-1.3,+12.3]$ & 0.17 \\
 Fixed             & 0.567 & 0.300\,/\,0.127 & $+9.0\,[+1.3,+16.7]$ & 0.056 \\

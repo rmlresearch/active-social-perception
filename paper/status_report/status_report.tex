@@ -92,37 +92,37 @@ An episode is a \emph{success} if the robot reaches within 0.3\,m of the goal wi
 \section{Results}
 
 \subsection{Risk-aware gaze outperforms passive and heuristic gaze}
-On 1,800 paired replay episodes (Table~\ref{tab:replay}) risk-aware gaze outperforms the fixed camera, scanning, look-at-nearest and the TTC heuristic ($p_\text{Holm} \le 0.003$), with 40\% fewer collisions with undetected pedestrians than the fixed camera. The reduction is partly offset by more collisions with detected pedestrians (757 vs.\ 534): time spent observing other regions is time not spent observing them. The gaze oracle exceeds ours by 4 points, which bounds the gain available from better pointing of this camera; the 360$^\circ$ camera exceeds it by 21 points, so the dominant limitation is coverage.
+On 1,800 paired replay episodes (Table~\ref{tab:replay}) risk-aware gaze outperforms the fixed camera, scanning, look-at-nearest and the TTC heuristic ($p_\text{Holm} \le 0.003$), with 35\% fewer episodes ending in a collision with an undetected pedestrian than the fixed camera (344 vs.\ 526 of 1,800). The reduction is partly offset by more episodes ending in a collision with a detected pedestrian (272 vs.\ 163): time spent observing other regions is time not spent observing them. The gaze oracle exceeds ours by 4 points, which bounds the gain available from better pointing of this camera; the 360$^\circ$ camera exceeds it by 21 points, so the dominant limitation is coverage.
 
 \begin{table}[t]
 \centering
-\caption{Replayed crowds, 1,800 paired episodes. Success excluding spawn collisions, collisions with undetected and with detected pedestrians, $p_\text{Holm}$ vs.\ ours.}
+\caption{Replayed crowds, 1,800 paired episodes. Each episode ends as a success, a collision with an undetected pedestrian, a collision with a detected pedestrian, or a timeout (fractions; spawn collisions excluded). $p_\text{Holm}$ vs.\ ours.}
 \label{tab:replay}
 \footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcccc}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lccccc}
 \toprule
-Gaze & Success & Undetected & Detected & $p_\text{Holm}$ \\
+Gaze & Success & Undet.\ coll. & Det.\ coll. & Timeout & $p_\text{Holm}$ \\
 \midrule
-Risk-aware (ours) & 0.643 & 964 & 757 & -- \\
-Decoupled         & 0.644 & 880 & 832 & 0.55 \\
-Information gain  & 0.629 & 1011 & 714 & 0.54 \\
-Fixed             & 0.601 & 1605 & 534 & 0.003 \\
-Look at nearest   & 0.599 & 1811 & 448 & 0.002 \\
-TTC heuristic     & 0.584 & 1908 & 456 & $<$0.001 \\
-Scan              & 0.577 & 1603 & 948 & $<$0.001 \\
+Risk-aware (ours) & 0.646 & 0.191 & 0.151 & 0.012 & -- \\
+Decoupled         & 0.648 & 0.163 & 0.172 & 0.017 & 0.57 \\
+Information gain  & 0.631 & 0.208 & 0.148 & 0.012 & 0.51 \\
+Fixed             & 0.603 & 0.292 & 0.091 & 0.014 & 0.002 \\
+Look at nearest   & 0.600 & 0.313 & 0.075 & 0.012 & 0.001 \\
+TTC heuristic     & 0.586 & 0.318 & 0.083 & 0.013 & $<$0.001 \\
+Scan              & 0.579 & 0.251 & 0.158 & 0.012 & $<$0.001 \\
 \midrule
-Gaze oracle       & 0.686 & 523 & 844 & \\
-360$^\circ$ camera & 0.858 & 39 & 448 & \\
+Gaze oracle       & 0.689 & 0.083 & 0.193 & 0.035 & \\
+360$^\circ$ camera & 0.860 & 0.001 & 0.107 & 0.032 & \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{The objective matters, joint optimization does not}
-Information gain ties the risk-aware objective (272:246, $p{=}0.27$), and so does the decoupled planner (263:265). The gain is attributable to the objective, which directs the camera at the uncertainty that affects the planned path, and not to the joint optimization of gaze and motion; the decoupled variant is computationally cheaper and equally effective. In the ablations (Holm over eight), only the tracker and the detected-pedestrian gaze term are individually necessary: a Kalman tracker in place of the PMB lowers success by 5.5 points ($p_\text{Holm}{=}0.001$), removing the detected-pedestrian term by 3.5 ($p_\text{Holm}{=}0.03$), and removing the undetected-pedestrian term by 3.2 ($p_\text{Holm}{=}0.07$); the undetected-pedestrian constraint, existence weighting, the pruning of open-loop estimates and the propagated state covariance show no measurable effect.
+Information gain ties the risk-aware objective (274:247, $p{=}0.26$), and so does the decoupled planner (264:267). The gain is attributable to the objective, which directs the camera at the uncertainty that affects the planned path, and not to the joint optimization of gaze and motion; the decoupled variant is computationally cheaper and equally effective. In the ablations (Holm over eight), only the tracker and the detected-pedestrian gaze term are individually necessary: a Kalman tracker in place of the PMB lowers success by 5.5 points ($p_\text{Holm}{=}0.001$), removing the detected-pedestrian term by 3.5 ($p_\text{Holm}{=}0.03$), and removing the undetected-pedestrian term by 3.2 ($p_\text{Holm}{=}0.07$); the undetected-pedestrian constraint, existence weighting, the pruning of open-loop estimates and the propagated state covariance show no measurable effect.
 
 \subsection{Dependence on crowd density}
-Splitting the episodes by the number of pedestrians near the straight-line path (Table~\ref{tab:density}), the gain over the fixed camera is absent at low density, 5 points at medium density and 7.5 points at high density, where risk-aware gaze also exceeds information gain (0.441 vs.\ 0.390), the only place in the replays where the two objectives separate. This split was made after the pre-registered analysis and is descriptive.
+Splitting the episodes by the number of pedestrians near the straight-line path (Table~\ref{tab:density}), the gain over the fixed camera is absent at low density, 5 points at medium density and 7.5 points at high density, where risk-aware gaze also exceeds information gain (0.447 vs.\ 0.394), the only place in the replays where the two objectives separate. This split was made after the pre-registered analysis and is descriptive.
 
 \begin{table}[t]
 \centering
@@ -134,9 +134,9 @@ Splitting the episodes by the number of pedestrians near the straight-line path 
 \toprule
 Crowd & $n$ & Ours & Info.\ gain & Fixed & 360$^\circ$ & Ours vs.\ fixed \\
 \midrule
-Sparse & 690 & 0.790 & 0.796 & 0.780 & 0.938 & 84\,:\,77 ($p{=}0.64$) \\
-Medium & 613 & 0.643 & 0.635 & 0.591 & 0.869 & 129\,:\,97 ($p{=}0.04$) \\
-Dense  & 497 & 0.441 & 0.390 & 0.366 & 0.732 & 113\,:\,76 ($p{=}0.009$) \\
+Sparse & 690 & 0.791 & 0.799 & 0.783 & 0.939 & 83\,:\,77 ($p{=}0.69$) \\
+Medium & 613 & 0.644 & 0.635 & 0.589 & 0.871 & 128\,:\,94 ($p{=}0.03$) \\
+Dense  & 497 & 0.447 & 0.394 & 0.372 & 0.736 & 116\,:\,79 ($p{=}0.01$) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -146,19 +146,21 @@ On SocNavBench's 30 curated episodes with ten fresh seeds (300 paired runs, Tabl
 
 \begin{table}[t]
 \centering
-\caption{SocNavBench with RGB-D vision, 300 paired runs; difference to ours with 95\% cluster-bootstrap CI; one-sided episode-level permutation test, Holm-corrected.}
+\caption{SocNavBench with RGB-D vision, 300 paired runs. Fractions of runs ending in a collision with an undetected and with a detected pedestrian (the remainder, at most two per method, are timeouts); difference to ours with 95\% cluster-bootstrap CI; one-sided episode-level permutation test, Holm-corrected.}
 \label{tab:socnav}
 \footnotesize
-\begin{tabular}{lccc}
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
 \toprule
-Gaze & Success & Ours $-$ other (pts) & $p_\text{Holm}$ \\
+Gaze & Success & Coll.\ undet.\,/\,det. & Ours $-$ other (pts) & $p_\text{Holm}$ \\
 \midrule
-Risk-aware (ours) & \textbf{0.657} & -- & -- \\
-Decoupled         & 0.633 & $+2.3$ $[-6.0, +10.3]$ & 0.29 \\
-Information gain  & 0.603 & $+5.3$ $[-1.3, +12.3]$ & 0.17 \\
-Fixed             & 0.567 & $+9.0$ $[+1.3, +16.7]$ & 0.056 \\
+Risk-aware (ours) & \textbf{0.657} & 0.167\,/\,0.170 & -- & -- \\
+Decoupled         & 0.633 & 0.200\,/\,0.167 & $+2.3\,[-6.0,+10.3]$ & 0.29 \\
+Information gain  & 0.603 & 0.223\,/\,0.167 & $+5.3\,[-1.3,+12.3]$ & 0.17 \\
+Fixed             & 0.567 & 0.300\,/\,0.127 & $+9.0\,[+1.3,+16.7]$ & 0.056 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \subsection{Calibration of the undetected-pedestrian model}
@@ -168,7 +170,7 @@ We compared the Poisson part of the tracker with ground truth on 240 replay epis
 Evaluated on the tuning seed and not adopted: a hybrid risk-plus-entropy objective; a time-to-contact term; path-swept relevance; detection-history calibration of the perception cost; pan-effort and horizon sweeps; a camera rate twice the control rate; network prediction of open-loop estimates; propagation of estimate uncertainty through the predictor's sensitivity; a lower robot speed, which reduced success for every method because replayed pedestrians do not avoid the robot.
 
 \section{Limitations}
-\emph{Non-reactive crowd.} Replayed pedestrians do not react to the robot, which penalizes the caution that the undetected-pedestrian terms introduce. \emph{Localization.} The robot pose is ground truth plus noise in both settings. \emph{Sensing.} In replay the camera is simulated; in SocNavBench detections are real but discarded beyond 4\,m, although the detector operates to 9\,m. \emph{Ceiling.} Of the 36 points between our method and perfect perception, 21 are attributable to coverage and cannot be recovered by any gaze policy with this field of view. \emph{Statistics.} At 300 runs, two of the three SocNavBench comparisons are underpowered; detecting a 9-point effect at the corrected level requires about 500.
+\emph{Non-reactive crowd.} Replayed pedestrians do not react to the robot, which penalizes the caution that the undetected-pedestrian terms introduce. \emph{Localization.} The robot pose is ground truth plus noise in both settings. \emph{Sensing.} In replay the camera is simulated; in SocNavBench detections are real but discarded beyond 4\,m, although the detector operates to 9\,m. \emph{Ceiling.} Of the 35 points between our method and perfect perception, 21 are attributable to coverage and cannot be recovered by any gaze policy with this field of view. \emph{Statistics.} At 300 runs, two of the three SocNavBench comparisons are underpowered; detecting a 9-point effect at the corrected level requires about 500.
 
 \section{Next Steps}
 \textbf{Paper (James Zhu).} A full-length manuscript for IROS / RA-L from the extended abstract: related work on active perception, information-theoretic sensor control and perception-aware planning; the density analysis and the undetected-pedestrian model calibration as the explanatory sections; a Fisher--Rao measurement of how much task-relevant information each gaze policy gathers per step, from the existing logs; and the outcome partition by first collision in place of collision-step counts.

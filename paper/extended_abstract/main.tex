@@ -58,29 +58,29 @@ and the cost adds $w\,\rho_{jk}\operatorname{erf}^{-1}(1-2\delta)\sqrt{2a_{jk}^\
 
 \begin{table}[t]
 \centering
-\caption{Replayed crowds: 1,800 paired episodes. $p_\text{Holm}$ vs.\ ours.}
+\caption{Replayed crowds: 1,800 paired episodes. Success and fraction of episodes ending in a collision with a never-seen pedestrian (spawn collisions excluded). $p_\text{Holm}$ vs.\ ours.}
 \label{tab:replay}
 \footnotesize
 \begin{tabular}{lccc}
 \toprule
 Gaze & Success & Never-seen coll. & $p_\text{Holm}$ \\
 \midrule
-Risk-aware (ours)  & \textbf{0.643} & 964  & -- \\
-Decoupled          & 0.644 & 880  & 0.55 \\
-Information gain   & 0.629 & 1011 & 0.54 \\
-Fixed              & 0.601 & 1605 & 0.003 \\
-Look at nearest    & 0.599 & 1811 & 0.002 \\
-TTC heuristic      & 0.584 & 1908 & $<$0.001 \\
-Scan               & 0.577 & 1603 & $<$0.001 \\
+Risk-aware (ours)  & \textbf{0.646} & 0.191 & -- \\
+Decoupled          & 0.648 & 0.163 & 0.57 \\
+Information gain   & 0.631 & 0.208 & 0.51 \\
+Fixed              & 0.603 & 0.292 & 0.002 \\
+Look at nearest    & 0.600 & 0.313 & 0.001 \\
+TTC heuristic      & 0.586 & 0.318 & $<$0.001 \\
+Scan               & 0.579 & 0.251 & $<$0.001 \\
 \midrule
-Gaze oracle        & 0.686 & 523  & \\
-360$^\circ$ camera & 0.858 & 39   & \\
+Gaze oracle        & 0.689 & 0.083 & \\
+360$^\circ$ camera & 0.860 & 0.001 & \\
 \bottomrule
 \end{tabular}
 \vspace{-3mm}
 \end{table}
 
-\textbf{Replayed crowds.} The robot crosses ETH/UCY scenes (60$^\circ$ FOV, 4\,m range) among replayed, non-reactive pedestrians. The camera model includes occlusion, a 0.9 detection probability and range-dependent noise. The PMB prior is fitted on the first half of each recording, and episodes are drawn from the second half (450 per scene). Risk-aware gaze beats all passive and heuristic gaze strategies (Table~\ref{tab:replay}), with 40\% fewer collisions with never-seen pedestrians than the fixed camera; it does pay with more collisions with tracked pedestrians (757 vs.\ 534). It ties information gain and the decoupled variant. In the ablations (Holm over eight), replacing the PMB tracker by a Kalman filter (0.588, $p_\text{Holm}{=}0.001$) and dropping the tracked-pedestrian gaze term (0.608, $p_\text{Holm}{=}0.03$) significantly lower success; the unseen-pedestrian term is borderline (0.611, $p_\text{Holm}{=}0.07$).
+\textbf{Replayed crowds.} The robot crosses ETH/UCY scenes (60$^\circ$ FOV, 4\,m range) among replayed, non-reactive pedestrians. The camera model includes occlusion, a 0.9 detection probability and range-dependent noise. The PMB prior is fitted on the first half of each recording, and episodes are drawn from the second half (450 per scene). Risk-aware gaze beats all passive and heuristic gaze strategies (Table~\ref{tab:replay}), with 35\% fewer episodes ending in a collision with a never-seen pedestrian than the fixed camera (344 vs.\ 526 of 1,800); it does pay with more episodes ending in a collision with a tracked pedestrian (272 vs.\ 163). It ties information gain and the decoupled variant. In the ablations (Holm over eight), replacing the PMB tracker by a Kalman filter (0.588, $p_\text{Holm}{=}0.001$) and dropping the tracked-pedestrian gaze term (0.608, $p_\text{Holm}{=}0.03$) significantly lower success; the unseen-pedestrian term is borderline (0.611, $p_\text{Holm}{=}0.07$).
 
 \textbf{Photorealistic RGB-D simulation.} We connected the planner to SocNavBench~\cite{socnavbench}. It replays the same recordings in S3DIS building scans~\cite{armeni2016}, with pedestrians rendered as SURREAL bodies~\cite{varol2017}. Each step, the robot renders a $256{\times}256$ RGB-D image from its pose and pan angle (Fig.~\ref{fig:socnav}). A COCO-trained Faster R-CNN~\cite{ren2015} detects persons, the range comes from the depth pixels inside each box, and detections are associated with the tracks by gated Hungarian matching. On rendered frames, detection precision is 0.93 and recall is 0.88--0.96 within 4\,m, with a median position error of 0.12\,m. Walls enter the MPC as half-plane constraints at the nearest map points. We compare our method with the three best alternatives of the replay study on SocNavBench's 30 curated single-recording episodes with ten fresh seeds each (300 paired runs). Since seeds share episodes, the primary test is a permutation test on the 30 per-episode mean differences.
 

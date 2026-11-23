@@ -1,0 +1,11 @@
+16200 episodes; the original step-count test had 11 false successes and 50 false failures
+gaze                   n  success coll. undetected coll. detected  timeout   (episodes, fractions)
+Risk-aware (ours)   1800 1163 0.646     344 0.191       272 0.151    21 0.012
+Decoupled           1800 1166 0.648     293 0.163       310 0.172    31 0.017
+Information gain    1800 1136 0.631     375 0.208       267 0.148    22 0.012
+Fixed               1800 1086 0.603     526 0.292       163 0.091    25 0.014
+Look at nearest     1800 1080 0.600     564 0.313       135 0.075    21 0.012
+TTC heuristic       1800 1055 0.586     572 0.318       149 0.083    24 0.013
+Scan                1800 1043 0.579     452 0.251       284 0.158    21 0.012
+Gaze oracle         1800 1241 0.689     149 0.083       347 0.193    63 0.035
+360 camera          1800 1548 0.860       2 0.001       193 0.107    57 0.032

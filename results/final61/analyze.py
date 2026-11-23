@@ -54,13 +54,22 @@ SOCNAV_CAMERA = {"information gain": "infogain", "TTC heuristic": "ttc", "look-a
 
 
 def load_a(fname, planner):
+    """Prefers the rerun with first-collision termination ({fname}_stop.csv): success excl. spawn is then
+    reached-without-a-non-spawn-collision (the original csv's test mixed collision steps with pedestrian counts,
+    see partition.py) and each episode is exactly one of success / undetected / detected collision / timeout."""
     from evaluate_nav import load
+    stop = os.path.exists(f"{HERE}/{fname}_stop.csv")
     out = {}
-    for r in load(f"{HERE}/{fname}.csv"):
+    for r in load(f"{HERE}/{fname}_stop.csv" if stop else f"{HERE}/{fname}.csv"):
         if r["planner"] == planner:
-            out[(r["scene"], int(r["episode"]))] = dict(s=flag(r["success_nospawn"]), s_all=flag(r["success"]),
-                                                       unseen=int(float(r["coll_untracked"])),
-                                                       tracked=int(float(r["coll_tracked"])), spawn=int(float(r["coll_spawn"])))
+            fc = r.get("first_coll", "") if stop else ""
+            s = (flag(r["reached"]) and fc == "") if stop else flag(r["success_nospawn"])
+            out[(r["scene"], int(r["episode"]))] = dict(
+                s=s, s_all=flag(r["success"]), stop=stop,
+                unseen=int(fc == "untracked") if stop else int(float(r["coll_untracked"])),
+                tracked=int(fc == "tracked") if stop else int(float(r["coll_tracked"])),
+                timeout=int(not flag(r["reached"]) and fc == "") if stop else 0,
+                spawn=int(float(r["coll_spawn"])))
     return out
 
 
@@ -68,14 +77,17 @@ def part_a():
     R = {m: load_a("main", p) for m, p in METHODS_A.items()}
     keys = sorted(set.intersection(*[set(v) for v in R.values()]))
     print(f"=== PART A: 2D replays, seed 61, {len(keys)} paired episodes (Zara01, Zara02, ETH, Hotel)")
-    print(f"{'method':18s} {'success':>8s} {'all coll.':>10s} {'Zara':>6s} {'ETH+Hot':>8s} {'never-seen':>11s} {'tracked':>8s} {'spawn':>6s}")
+    stop = all(R[m][k]["stop"] for m in R for k in keys)
+    print("outcome columns are episodes (first non-spawn collision; _stop.csv)" if stop else "outcome columns are collision steps")
+    print(f"{'method':18s} {'success':>8s} {'all coll.':>10s} {'Zara':>6s} {'ETH+Hot':>8s} {'undetected':>11s} {'detected':>8s} {'timeout':>8s} {'spawn':>6s}")
     for m in METHODS_A:
         r = R[m]
         z = [k for k in keys if k[0].startswith("zara")]
         e = [k for k in keys if not k[0].startswith("zara")]
         print(f"{m:18s} {np.mean([r[k][PRIM] for k in keys]):8.3f} {np.mean([r[k][SEC] for k in keys]):10.3f} "
               f"{np.mean([r[k][PRIM] for k in z]):6.3f} {np.mean([r[k][PRIM] for k in e]):8.3f} "
-              f"{sum(r[k]['unseen'] for k in keys):11d} {sum(r[k]['tracked'] for k in keys):8d} {sum(r[k]['spawn'] for k in keys):6d}")
+              f"{sum(r[k]['unseen'] for k in keys):11d} {sum(r[k]['tracked'] for k in keys):8d} "
+              f"{sum(r[k]['timeout'] for k in keys):8d} {sum(r[k]['spawn'] for k in keys):6d}")
     prim = {}
     for o in ["TTC heuristic", "look-at-nearest", "decoupled", "scan", "fixed"]:
         prim[o] = mcnemar(R["proposed"], R[o], keys, PRIM, "greater")

@@ -1,0 +1,5 @@
+gaze                  n  success coll. undetected coll. detected  timeout
+Risk-aware (ours)   300    0.657        50 0.167      51 0.170    2 0.007
+Decoupled           300    0.633        60 0.200      50 0.167    0 0.000
+Information gain    300    0.603        67 0.223      50 0.167    2 0.007
+Fixed               300    0.567        90 0.300      38 0.127    2 0.007
